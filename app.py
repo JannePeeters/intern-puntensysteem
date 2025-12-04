@@ -73,7 +73,7 @@ if uploaded_file:
             "Persoon": "👤 Medewerker",
             "punten": "🏆 Totaal aantal punten"
         })
-        .sort_values(by="🏆 Totaal aantal punten", ascending=False)
+        .sort_values(by="🏆 Totaal aantal punten", ascending=False))
 
     st.dataframe(total_points)
 
