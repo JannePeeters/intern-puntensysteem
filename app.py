@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import pandas as pd
 
@@ -9,28 +8,28 @@ st.title("🏆 Medewerkers en Bedrijven Wrapped")
 # Puntensysteem per actie
 # ------------------------------
 POINTS_RULES = {
-    "open app": 1,
-    "User profile click": 1,
-    "Company profile click": 1,
+    "open app": 2,
+    "User profile click": 3,
+    "Company profile click": 3,
     "event detail": 2,
     "event-checkin": 5,
     "call": 3,
     "call mobile": 3,
-    "news_item like": 1,
-    "news_item like removed": -1,
-    "bulletin board item opened": 1,
-    "bulletin board item added": 3,
+    "news_item like": 2,
+    "news_item like removed": -2,
+    "bulletin board item opened": 2,
+    "bulletin board item added": 4,
     "AppCMS fixed": 1,
     "AppCMS menu": 1,
-    "AppCMS file": 2,
+    "AppCMS file": 1,
     "AppCMS applink": 1,
     "AppCMS edited": 1,
     "Message": 2,
-    "email": 1,
-    "visit website": 1,
-    "user added": 3,
-    "user deleted": 3,
-    "user edited": 3,
+    "email": 2,
+    "visit website": 3,
+    "user added": 1,
+    "user deleted": 1,
+    "user edited": 1,
     "login": 0
 }
 
@@ -66,14 +65,15 @@ if uploaded_file:
     df_points = pd.concat([df_open_app, other_actions], ignore_index=True)
 
     st.subheader("🏅 Punten per medewerker")
-    total_points = df_points.groupby("Persoon")["punten"].sum().rename(columns={
-        "Persoon": "👤 Medewerker",
-        "Bedrijven": "🏢 Bedrijf",
-        "Actie": "⚡ Actie",
-        "punten": "⭐ Punten",
-        "Details": "📝 Details",
-        "Datum": "📅 Datum"
-    }).sort_values(ascending=False)
+    total_points = (df_points
+        .groupby("Persoon")["punten"]
+        .sum()
+        .reset_index()
+        .rename(columns={
+            "Persoon": "👤 Medewerker",
+            "punten": "🏆 Totaal aantal punten"
+        })
+        .sort_values(by="🏆 Totaal aantal punten", ascending=False)
 
     st.dataframe(total_points)
 
@@ -151,13 +151,16 @@ if uploaded_file:
             # Activiteiten bezocht / bekeken
             events_viewed = user_df[user_df['Actie'] == 'event detail'].shape[0]
             events_checkin = user_df[user_df['Actie'] == 'event-checkin'].shape[0]
+            nr_events = df_points[df_points['Actie'] == 'event detail']['Details'].nunique()
+            percentage_bekeken = events_viewed / nr_events * 100
+            percentage_bezocht = events_checkin / nr_events * 100
             if events_viewed > 0 and events_checkin > 0:
-                perc = events_checkin / events_viewed * 100
-                st.write(f"🎉 Je hebt {events_viewed} activiteiten bekeken en {events_checkin} activiteiten bezocht... Dat is {perc:.0f}% 🤓☝️")
+                st.write(f"🎉 Je hebt {events_viewed} activiteiten bekeken en {events_checkin} activiteiten bezocht... Dat is {percentage_bezocht:.0f}% van alle activiteiten 🤓☝️")
             elif events_viewed > 0:
-                st.write(f"🎉 Je hebt {events_viewed} activiteiten bekeken!")
+                st.write(f"🎉 Je hebt {events_viewed} activiteiten bekeken! Dat is {percentage_bekeken:.0f}% van alle activiteiten 🤓☝️")
             elif events_checkin > 0:
-                st.write(f"🎉 Je hebt {events_checkin} activiteiten bezocht!")
+                st.metric("Activiteiten bezocht", events_checkin)
+                st.write(f"🎉 Je hebt {events_checkin} activiteiten bezocht! Dat is {percentage_bezocht:.0f}% van alle activiteiten 🤓☝️")
             else:
                 st.write(f"😔 Je hebt nog nooit een activiteit bekeken of bezocht. Kom eens langs; is écht gezellig!")
 
